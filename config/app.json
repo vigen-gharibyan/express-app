@@ -1,0 +1,5 @@
+﻿{
+    "connectionString": "mongodb://localhost:27017/express-app",
+    "apiUrl": "http://localhost:4000",
+    "secret": "SECRET"
+}
