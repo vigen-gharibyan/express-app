@@ -29,20 +29,20 @@ function register(req, res) {
         // save the user
         newUser.save(function (err) {
             if (err) {
-                let message = {};
+                let message = '';
 
                 if (err.code === 11000) {
-                    message.username = 'User already exists'
+                    message = 'User already exists'
                 } else {
                     if (err.errors) {
                         if (err.errors.username) {
-                            message.username = err.errors.username.message;
+                            message = err.errors.username.message;
                         }
                         if (err.errors.email) {
-                            message.email = err.errors.email.message;
+                            message = err.errors.email.message;
                         }
                         if (err.errors.password) {
-                            message.password = err.errors.password.message;
+                            message = err.errors.password.message;
                         }
                     }
                 }
@@ -67,10 +67,25 @@ function authenticate(req, res) {
             {email: req.body.username}
         ]
     }, function (err, user) {
-        if (err) throw err;
+        if (err) {
+            let message = '';
+            if (err.errors) {
+                if (err.errors.username) {
+                    message = err.errors.username.message;
+                }
+                if (err.errors.password) {
+                    message = err.errors.password.message;
+                }
+            }
+            return res.json({
+                success: false,
+                msg: message
+            });
+        //    throw err;
+        }
 
         if (!user) {
-            res.status(401).send({
+            res.json({
                 success: false,
                 msg: 'User not found.'
             });
@@ -81,9 +96,12 @@ function authenticate(req, res) {
                     // if user is found and password is right create a token
                     var token = jwt.sign(user.toJSON(), config.secret);
                     // return the information including token as JSON
-                    res.json({success: true, token: token});
+                    res.json({
+                        success: true,
+                        token: token
+                    });
                 } else {
-                    res.status(401).send({
+                    res.json({
                         success: false,
                         msg: 'Wrong password.'
                     });
@@ -109,6 +127,20 @@ function getAll(req, res) {
 }
 
 function getCurrent(req, res) {
+
+    /*
+    const token = req.headers.authorization.split(' ')[1];
+    jwt.verify(token, config.secret, (err, decoded) => {
+        const userId = decoded.sub;
+        User.findById(userId, (userErr, user) => {
+            return res.status(200).json({
+                success: true,
+                msg: user
+            });
+        });
+    });
+    */
+
     userService.getById(req.user.sub)
         .then(function (user) {
             if (user) {
